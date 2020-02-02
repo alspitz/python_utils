@@ -95,5 +95,12 @@ def skew_matrix(v):
                    (v[2], 0, -v[0]),
                    (-v[1], v[0], 0)))
 
+def hat(v):
+  return skew_matrix(v)
+
+def vee(m):
+  assert np.allclose(m.T, -m)
+  return np.array((-m[1, 2], m[0, 2], -m[0, 1]))
+
 def axis_from_quat(q):
   return q[1:] / np.linalg.norm(q[1:])
