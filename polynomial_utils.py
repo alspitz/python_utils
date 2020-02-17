@@ -36,6 +36,15 @@ def deriv_fitting_matrix(degree):
 
   return A
 
+def change_poly_duration(poly, duration):
+  new_poly = poly.copy()
+  divider = 1
+  for i in range(len(new_poly)):
+    new_poly[i] = poly[i] / divider
+    divider *= duration
+
+  return new_poly
+
 if __name__ == "__main__":
   for i in range(1, 5):
     mat = deriv_fitting_matrix(2 * i)
