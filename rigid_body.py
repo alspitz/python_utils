@@ -1,6 +1,6 @@
 import numpy as np
 
-from math_utils import quat_identity, quat_mult, vector_quat
+from python_utils.mathu import quat_identity, quat_mult, vector_quat
 
 class RigidBody3D(object):
   """

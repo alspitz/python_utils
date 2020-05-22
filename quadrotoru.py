@@ -1,6 +1,6 @@
 import numpy as np
 
-from math_utils import skew_matrix
+from python_utils.mathu import skew_matrix
 
 class Quadrotor:
   """

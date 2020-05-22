@@ -1,7 +1,9 @@
 # python\_utils
 
-* filter\_utils: Methods for Dynamic RPM-based notch filtering
-* math\_utils: Mostly helpers for dealing with rotations
-* polynomial\_utils: Helper methods for fitting polynomials to start and end conditions
-* quadrotor\_utils: Quadrotor dynamics model
+* arrayu: Utilities for arrays / timeseries
+* filteru: Methods for smoothing, dynamic RPM-based notch filtering, and complementary filtering
+* mathu: Mostly helpers for dealing with rotations
+* plotu: Matplotlib utilities
+* polyu: Helper methods for fitting polynomials to start and end conditions
+* quadrotoru: Quadrotor dynamics model
 * rigid\_body: Simple 3D rigid body dynamics simulator
