@@ -7,3 +7,4 @@
 * polyu: Helper methods for fitting polynomials to start and end conditions
 * quadrotoru: Quadrotor dynamics model
 * rigid\_body: Simple 3D rigid body dynamics simulator
+* timeseriesu: Methods for structuring timeseries data, mostly recursive dicts
