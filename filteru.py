@@ -82,15 +82,23 @@ def static_rpm_notch(vals, rpm, fs, Q=5.0):
 
   return lfilter(*biquad_notch(freq, fs, Q), vals, axis=0)
 
+def pr_from_grav(grav):
+  """ Returns pitch and roll from a matrix of gravity vectors in body frame """
+  rolls = np.arctan2(grav[:, 1], grav[:, 2])
+  pitches = np.arcsin(-grav[:, 0])
+  return pitches, rolls
+
 @memory.cache
 def complementary_filter(weight, accs, gyros, dt, start_g=np.array((0, 0, 9.81))):
   assert 0 <= weight <= 1
+  assert weight_bias >= 0
   assert len(accs) == len(gyros)
+  assert len(start_g) == len(accs[0]) == len(gyros[0]) == 3
 
   N = len(accs)
 
   ss = np.empty((N, 3))
-  s = start_g
+  s = np.array(start_g)
 
   for i, (acc, gyro) in enumerate(zip(accs, gyros)):
     s_gyro = s + np.cross(s, gyro) * dt
@@ -100,7 +108,35 @@ def complementary_filter(weight, accs, gyros, dt, start_g=np.array((0, 0, 9.81))
 
     ss[i] = s
 
-  rolls = np.arctan2(ss[:, 1], ss[:, 2])
-  pitches = np.arcsin(-ss[:, 0])
+  return pr_from_grav(ss)
 
-  return pitches, rolls
+@memory.cache
+def complementary_filter_bias(weight, weight_bias, accs, gyros, dt, start_g=np.array((0, 0, 9.81)), start_bias=np.zeros(3)):
+  assert 0 <= weight <= 1
+  assert weight_bias >= 0
+  assert len(accs) == len(gyros)
+  assert len(start_g) == len(start_bias) == len(accs[0]) == len(gyros[0]) == 3
+
+  N = len(accs)
+
+  ss = np.empty((N, 3))
+  biases = np.empty((N, 3))
+  s = np.array(start_g)
+  bias = np.array(start_bias)
+
+  for i, (acc, gyro) in enumerate(zip(accs, gyros)):
+    s_gyro = s + np.cross(s, gyro - bias) * dt
+    s_acc = acc / np.linalg.norm(acc)
+
+    s = weight * s_acc + (1 - weight) * s_gyro
+    s /= np.linalg.norm(s)
+
+    # Bias is driven by difference between acc estimate and gyro estimate
+    bias += -weight_bias * np.cross(s_acc, s_gyro) * dt
+
+    ss[i] = s
+    biases[i] = bias.copy()
+
+  pitches, rolls = pr_from_grav(ss)
+
+  return pitches, rolls, biases
