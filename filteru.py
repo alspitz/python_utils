@@ -91,7 +91,6 @@ def pr_from_grav(grav):
 @memory.cache
 def complementary_filter(weight, accs, gyros, dt, start_g=np.array((0, 0, 9.81))):
   assert 0 <= weight <= 1
-  assert weight_bias >= 0
   assert len(accs) == len(gyros)
   assert len(start_g) == len(accs[0]) == len(gyros[0]) == 3
 
