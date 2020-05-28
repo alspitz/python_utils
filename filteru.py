@@ -101,7 +101,13 @@ def complementary_filter(weight, accs, gyros, dt, start_g=np.array((0, 0, 9.81))
 
   for i, (acc, gyro) in enumerate(zip(accs, gyros)):
     s_gyro = s + np.cross(s, gyro) * dt
-    s_acc = acc / np.linalg.norm(acc)
+
+    if np.linalg.norm(acc) < 1e-9:
+      s_acc = s
+      print("WARNING: Acc %d has low norm" % i, acc, gyro)
+    else:
+      s_acc = acc / np.linalg.norm(acc)
+
     s = weight * s_acc + (1 - weight) * s_gyro
     s /= np.linalg.norm(s)
 
@@ -125,7 +131,12 @@ def complementary_filter_bias(weight, weight_bias, accs, gyros, dt, start_g=np.a
 
   for i, (acc, gyro) in enumerate(zip(accs, gyros)):
     s_gyro = s + np.cross(s, gyro - bias) * dt
-    s_acc = acc / np.linalg.norm(acc)
+
+    if np.linalg.norm(acc) < 1e-9:
+      s_acc = s
+      print("WARNING: Acc %d has low norm" % i, acc, gyro)
+    else:
+      s_acc = acc / np.linalg.norm(acc)
 
     s = weight * s_acc + (1 - weight) * s_gyro
     s /= np.linalg.norm(s)
