@@ -31,7 +31,7 @@ class DataSet(dict):
 
     return ret
 
-  def add_point(self, key, delim='/', **data):
+  def add_point(self, key, delim='/', ts_metadata=None, **data):
     key = key.strip(delim)
 
     del_ind = key.find(delim)
@@ -41,11 +41,11 @@ class DataSet(dict):
         self[fkey] = DataSet()
         setattr(self, fkey, self[fkey])
 
-      self[fkey].add_point(key[del_ind + 1:], **data)
+      self[fkey].add_point(key[del_ind + 1:], delim=delim, ts_metadata=ts_metadata, **data)
 
     else:
       if key not in self:
-        self[key] = TimeSeries()
+        self[key] = TimeSeries(metadata=ts_metadata)
         setattr(self, key, self[key])
 
       self[key].add_point(**data)
@@ -63,9 +63,10 @@ class DataSet(dict):
     [v.finalize() for v in self.values()]
 
 class TimeSeries(dict):
-  def __init__(self):
+  def __init__(self, metadata=None):
     self.times = []
     self.meta_times = []
+    self.metadata = metadata
     self.finalized = False
 
   def sub_add(self, d, **kwargs):
@@ -124,7 +125,7 @@ class TimeSeries(dict):
 
     mask = np.logical_and(start_time < self.times, self.times < end_time)
 
-    ret = TimeSeries()
+    ret = TimeSeries(metadata=self.metadata)
     ret.finalized = True
     ret.times = self.times[mask].copy()
     if hasattr(self, 't0'):
