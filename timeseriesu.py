@@ -69,6 +69,30 @@ class TimeSeries(dict):
     self.metadata = metadata
     self.finalized = False
 
+  def _build_dict(self, d, obj, ind):
+    for name, val in d.items():
+      if isinstance(val, dict):
+        obj[name] = BasicAttrDict()
+        self._build_dict(val, obj[name], ind)
+      elif isinstance(val, np.ndarray) or isinstance(val, list):
+        obj[name] = val[ind]
+      else:
+        print(val)
+        assert False
+
+      setattr(obj, name, obj[name])
+
+  def point_iter(self):
+    assert self.finalized
+    for i in range(len(self.times)):
+      obj = BasicAttrDict()
+      self._build_dict(self, obj, i)
+      obj.t = self.times[i]
+      if len(self.meta_times):
+        obj.meta_t = self.meta_times[i]
+
+      yield obj
+
   def sub_add(self, d, **kwargs):
     for name, val in kwargs.items():
       first = name not in d
@@ -123,7 +147,7 @@ class TimeSeries(dict):
   def get_view(self, start_time, end_time):
     assert self.finalized
 
-    mask = np.logical_and(start_time < self.times, self.times < end_time)
+    mask = np.logical_and(start_time <= self.times, self.times <= end_time)
 
     ret = TimeSeries(metadata=self.metadata)
     ret.finalized = True
