@@ -27,3 +27,16 @@ def namedt(name=""):
   ret = named(name)
   plt.xlabel("Time (s)")
   return ret
+
+def hline(y, **kwargs):
+  ax = plt.gca()
+  ax.axhline(y, **kwargs)
+
+def defcolors():
+  return plt.rcParams["axes.prop_cycle"].by_key()['color']
+
+def dedup_legend():
+  """ https://stackoverflow.com/questions/13588920/stop-matplotlib-repeating-labels-in-legend """
+  handles, labels = plt.gca().get_legend_handles_labels()
+  by_label = dict(zip(labels, handles))
+  plt.legend(by_label.values(), by_label.keys())
