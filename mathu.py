@@ -3,6 +3,15 @@ import numpy as np
 R_slice = (slice(3), slice(3))
 t_slice = (slice(3), 3)
 
+def e(n, i):
+  ret = np.zeros(n)
+  ret[i - 1] = 1.0
+  return ret
+
+e1 = e(3, 1)
+e2 = e(3, 2)
+e3 = e(3, 3)
+
 def get_tf(R, t):
   tf = np.zeros((4, 4))
   tf[R_slice] = R
