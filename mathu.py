@@ -113,3 +113,10 @@ def vee(m):
 
 def axis_from_quat(q):
   return q[1:] / np.linalg.norm(q[1:])
+
+def normang(ang):
+  """
+    ang is in radians
+    returns in [-pi, pi]
+  """
+  return (ang + np.pi) % (2 * np.pi) - np.pi
