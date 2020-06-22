@@ -16,6 +16,11 @@ def first_nonzero(arr):
 def first_greater_than(val, arr):
   return first_that(lambda x: x > val, arr)
 
+def last_before(val, arr):
+  """ Requires sorted (monotonic) arr """
+  assert np.all(np.diff(arr) >= 0)
+  return np.searchsorted(arr, val) - 1
+
 def movmean(arr, n_avg):
   sums = np.cumsum(arr, dtype=float)
   sums[n_avg:] -= sums[:-n_avg]
