@@ -153,7 +153,10 @@ class TimeSeries(dict):
     ret.finalized = True
     ret.times = self.times[mask].copy()
     if hasattr(self, 't0'):
-      ret.t0 = self.t0
+      if len(ret.times):
+        ret.t0 = ret.times[0]
+      else:
+        ret.t0 = self.t0
     if len(self.meta_times):
       ret.meta_times = self.meta_times[mask].copy()
     else:
