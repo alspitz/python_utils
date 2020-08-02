@@ -120,3 +120,31 @@ def normang(ang):
     returns in [-pi, pi]
   """
   return (ang + np.pi) % (2 * np.pi) - np.pi
+
+def smoothang(ang):
+  """
+    "unnormalizes" such that angle value is smooth and measures cumulative angle
+  """
+  return np.hstack((ang[0], ang[0] + np.cumsum(normang(np.diff(ang)))))
+
+def rodmat(k):
+  ang = np.linalg.norm(k)
+  K = hat(k / ang)
+  return np.eye(3) + np.sin(ang) * K + (1 - np.cos(ang)) * K.dot(K)
+
+def rodrot(k, v):
+  ang = np.linalg.norm(k)
+  ax = k / ang
+
+  c = np.cos(ang)
+  s = np.sin(ang)
+  return v * c + np.cross(ax, v) * s + ax.dot(v) * (1 - c) * ax
+
+def rot_from_z_and_yaw(z, yaw):
+  """ Yaw as defined via Euler angles ZXY """
+  c1 = np.array((np.cos(yaw), np.sin(yaw), np.zeros_like(yaw))).T
+  y = np.cross(z, c1)
+  y /= np.linalg.norm(y, axis=-1)[:, np.newaxis]
+  x = np.cross(y, z)
+
+  return np.stack((x, y, z), axis=-1)
