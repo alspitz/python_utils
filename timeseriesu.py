@@ -59,6 +59,9 @@ class DataSet(dict):
   def get_after(self, start_time):
     return self.method_map('get_after', start_time)
 
+  def get_before(self, end_time):
+    return self.method_map('get_before', end_time)
+
   def finalize(self):
     [v.finalize() for v in self.values()]
 
@@ -168,6 +171,9 @@ class TimeSeries(dict):
 
   def get_after(self, start_time):
     return self.get_view(start_time, np.inf)
+
+  def get_before(self, end_time):
+    return self.get_view(-np.inf, end_time)
 
   def get_all(self):
     return self.get_view(-np.inf, np.inf)
