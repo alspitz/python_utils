@@ -148,3 +148,31 @@ def rot_from_z_and_yaw(z, yaw):
   x = np.cross(y, z)
 
   return np.stack((x, y, z), axis=-1)
+
+def normalized(v):
+  return v / np.linalg.norm(v)
+
+def numerical_jacobian(f, xs, dx=1e-6):
+  """
+      f is a function that accepts input of shape (n_points, input_dim)
+      and outputs (n_points, output_dim)
+
+      return the jacobian as (n_points, output_dim, input_dim)
+  """
+  if len(xs.shape) == 1:
+    xs = xs[np.newaxis, :]
+
+  assert len(xs.shape) == 2
+
+  ys = f(xs)
+
+  x_dim = xs.shape[1]
+  y_dim = ys.shape[1]
+
+  jac = np.empty((xs.shape[0], y_dim, x_dim))
+
+  for i in range(x_dim):
+    x_try = xs + dx * e(x_dim, i + 1)
+    jac[:, :, i] = (f(x_try) - ys) / dx
+
+  return jac
