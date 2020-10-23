@@ -8,7 +8,7 @@ class Quadrotor:
      motor_torque_scale: c s.t. torque = c * force(rpm)
      inertia: torque = I * alpha
   """
-  def __init__(self, *, mass, motor_thrust_coeffs, motor_torque_scale, inertia, motor_arm_length, motor_spread_angle, motor_inertia=0.0, center_of_mass=np.zeros(3)):
+  def __init__(self, *, mass, motor_thrust_coeffs, motor_torque_scale, inertia, motor_arm_length, motor_spread_angle, motor_inertia=0.0, center_of_mass=np.zeros(3), **kwargs):
     self.motor_thrust = np.poly1d(motor_thrust_coeffs)
 
     self.mass = mass
@@ -34,6 +34,9 @@ class Quadrotor:
 
     # torque = com x (0, 0, thrust) = [com]_x * (0, 0, thrust)
     self.com_thrust_torque = skew_matrix(center_of_mass)[:, 2][:, np.newaxis]
+
+    for k, v in kwargs.items():
+      setattr(self, k, v)
 
   def _zvecfromrpm(self, rpms):
     """ (1) Converts to radians per second
