@@ -43,23 +43,31 @@ def dedup_legend():
   """ https://stackoverflow.com/questions/13588920/stop-matplotlib-repeating-labels-in-legend """
   handles, labels = plt.gca().get_legend_handles_labels()
   by_label = dict(zip(labels, handles))
-  plt.legend(by_label.values(), by_label.keys())
+  return plt.legend(by_label.values(), by_label.keys())
 
 def simpleplot(times, data, yname="", title="", **kwargs):
   namedt(title)
   plt.plot(times, data, **kwargs)
   plt.ylabel(yname)
+  if 'label' in kwargs:
+    plt.legend()
 
 def subplot(times, data, yname="", title="", **kwargs):
   plt.figure(title)
-  n_dims = data.shape[1]
-  for i in range(n_dims):
-    plt.subplot(n_dims * 100 + 11 + i)
-    if not i: plt.title(title)
-    plt.plot(times, data[:, i], **kwargs)
-    ax_id = 'XYZ'[i] if i < 3 else str(i)
-    plt.ylabel("%s %s" % (ax_id, yname))
 
-  plt.xlabel("Time (s)")
-  if 'label' in kwargs:
-    plt.legend()
+  if len(data.shape) <= 1:
+    simpleplot(times, data, yname, title, **kwargs)
+
+  else:
+    n_dims = data.shape[1]
+    for i in range(n_dims):
+      plt.subplot(n_dims * 100 + 11 + i)
+      if not i: plt.title(title)
+      plt.plot(times, data[:, i], **kwargs)
+      ax_id = 'XYZ'[i] if i < 3 else str(i)
+      plt.ylabel("%s %s" % (ax_id, yname))
+
+    plt.xlabel("Time (s)")
+
+    if 'label' in kwargs:
+      plt.legend()
