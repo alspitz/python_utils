@@ -39,11 +39,14 @@ def vline(x, **kwargs):
 def defcolors():
   return plt.rcParams["axes.prop_cycle"].by_key()['color']
 
-def dedup_legend():
+def dedup_legend(ax=None):
   """ https://stackoverflow.com/questions/13588920/stop-matplotlib-repeating-labels-in-legend """
-  handles, labels = plt.gca().get_legend_handles_labels()
+  if ax is None:
+    ax = plt.gca()
+
+  handles, labels = ax.get_legend_handles_labels()
   by_label = dict(zip(labels, handles))
-  return plt.legend(by_label.values(), by_label.keys())
+  return ax.legend(by_label.values(), by_label.keys())
 
 def simpleplot(times, data, yname="", title="", **kwargs):
   namedt(title)
