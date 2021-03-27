@@ -1,7 +1,12 @@
 import numpy as np
 
 def masked_copy(src, dest, mask):
-  for k, data in src.items():
+  # Ideally, this meta data should not be in the same namespace as the data.
+  forbidden_keys = ["times", "meta_times", "metadata", "finalized", "t0"]
+  for k, data in src.__dict__.items():
+    if k in forbidden_keys:
+      continue
+
     if isinstance(data, dict):
       dest[k] = BasicAttrDict()
       masked_copy(data, dest[k], mask)
@@ -61,6 +66,9 @@ class DataSet(dict):
 
   def get_before(self, end_time):
     return self.method_map('get_before', end_time)
+
+  def get_multiview(self, mask):
+    return self.method_map('get_multiview', mask)
 
   def finalize(self):
     [v.finalize() for v in self.values()]
@@ -147,27 +155,34 @@ class TimeSeries(dict):
       self.t0 = self.times[0]
       self.finalized = True
 
-  def get_view(self, start_time, end_time):
+  def get_masked_view(self, timemask):
     assert self.finalized
-
-    mask = np.logical_and(start_time <= self.times, self.times <= end_time)
 
     ret = TimeSeries(metadata=self.metadata)
     ret.finalized = True
-    ret.times = self.times[mask].copy()
+    ret.times = self.times[timemask].copy()
     if hasattr(self, 't0'):
       if len(ret.times):
         ret.t0 = ret.times[0]
       else:
         ret.t0 = self.t0
     if len(self.meta_times):
-      ret.meta_times = self.meta_times[mask].copy()
+      ret.meta_times = self.meta_times[timemask].copy()
     else:
       ret.meta_times = self.meta_times
 
-    masked_copy(self, ret, mask)
+    masked_copy(self, ret, timemask)
 
     return ret
+
+  def get_multiview(self, timess):
+    mask = np.zeros(len(self.times), dtype=bool)
+    for times in timess:
+      mask = np.logical_or(mask, np.logical_and(times[0] <= self.times, self.times <= times[1]))
+    return self.get_masked_view(mask)
+
+  def get_view(self, start_time, end_time):
+    return self.get_multiview([(start_time, end_time)])
 
   def get_after(self, start_time):
     return self.get_view(start_time, np.inf)
