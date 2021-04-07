@@ -74,3 +74,79 @@ def subplot(times, data, yname="", title="", **kwargs):
 
     if 'label' in kwargs:
       plt.legend()
+
+class Plot:
+  def __init__(self, title=None, xt=None, yt=None, **kwargs):
+    self.fig = plt.figure(**kwargs)
+    self.ax = plt.gca()
+    if xt is not None:
+      self.ax.set_xlabel(str(xt))
+    if yt is not None:
+      self.ax.set_ylabel(str(yt))
+
+    if title is not None:
+      self.ax.set_title(title)
+
+  def add(self, times, data, **kwargs):
+    self.ax.plot(times, data, **kwargs)
+
+  def __getattr__(self, f, *args, **kwargs):
+    if f.startswith("set_"):
+      return getattr(self.ax, f)
+
+class Subplot:
+  def __init__(self, title=None, xt=None, yt=None, **kwargs):
+    self.title = title
+    self.xt = xt
+    self.yt = yt
+    self.kwargs = kwargs
+    self.fig = None
+
+    for methodname in ['axvspan', 'axhspan', 'grid']:
+      def proxy(*args, methodname=methodname, **kwargs):
+        return self._map_method(methodname, *args, **kwargs)
+
+      setattr(self, methodname, proxy)
+
+  def _create_fig(self, rows, cols):
+    self.fig, self.axs = plt.subplots(rows, cols, **self.kwargs)
+    if rows == 1:
+      self.axs = [self.axs]
+
+    if self.title is not None:
+      self.fig.canvas.manager.set_window_title(self.title)
+      self.axs[0].set_title(self.title)
+
+    if self.yt is not None:
+      for ax in self.axs:
+        ax.set_ylabel(str(self.yt))
+
+    if self.xt is not None:
+      self.axs[-1].set_xlabel(str(self.xt))
+
+  def add(self, times, data, **kwargs):
+    if type(data) is not np.ndarray:
+      data = np.array(data)
+
+    assert len(data.shape) <= 2
+
+    if len(data.shape) == 1:
+      data = data[:, np.newaxis]
+
+    rows = data.shape[1]
+
+    assert rows < 20
+    if self.fig is None:
+      self._create_fig(rows, 1)
+
+    assert rows <= len(self.axs)
+
+    for i in range(rows):
+      self.axs[i].plot(times, data[:, i], **kwargs)
+
+  def legend(self, **kwargs):
+    dedup_legend(self.axs[-1], **kwargs)
+
+  def _map_method(self, methodname, *args, **kwargs):
+    for ax in self.axs:
+      getattr(ax, methodname)(*args, **kwargs)
