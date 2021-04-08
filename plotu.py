@@ -118,8 +118,9 @@ class Subplot:
       self.axs[0].set_title(self.title)
 
     if self.yt is not None:
-      for ax in self.axs:
-        ax.set_ylabel(str(self.yt))
+      for i, ax in enumerate(self.axs):
+        lab = self.yt[i] if type(self.yt) is list else self.yt
+        ax.set_ylabel(str(lab))
 
     if self.xt is not None:
       self.axs[-1].set_xlabel(str(self.xt))
