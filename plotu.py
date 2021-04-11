@@ -94,6 +94,31 @@ class Plot:
     if f.startswith("set_"):
       return getattr(self.ax, f)
 
+class Plot3D:
+  def __init__(self, title=None, xt=None, yt=None, zt=None, **kwargs):
+    self.fig = plt.figure(**kwargs)
+    self.ax = plt.axes(projection='3d')
+    if xt is not None:
+      self.ax.set_xlabel(str(xt))
+    if yt is not None:
+      self.ax.set_ylabel(str(yt))
+    if yt is not None:
+      self.ax.set_zlabel(str(zt))
+
+    if title is not None:
+      self.fig.canvas.manager.set_window_title(title)
+      self.ax.set_title(title)
+
+  def add(self, data, **kwargs):
+    self.ax.plot(data[:, 0], data[:, 1], zs=data[:, 2], **kwargs)
+
+  def __getattr__(self, f, *args, **kwargs):
+    if f.startswith("set_"):
+      return getattr(self.ax, f)
+
+  def legend(self, **kwargs):
+    dedup_legend(self.ax, **kwargs)
+
 class Subplot:
   def __init__(self, title=None, xt=None, yt=None, **kwargs):
     self.title = title
