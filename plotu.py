@@ -88,7 +88,7 @@ class Plot:
       self.ax.set_title(title)
 
   def add(self, times, data, **kwargs):
-    self.ax.plot(times, data, **kwargs)
+    return self.ax.plot(times, data, **kwargs)
 
   def __getattr__(self, f, *args, **kwargs):
     if f.startswith("set_"):
@@ -110,14 +110,17 @@ class Plot3D:
       self.ax.set_title(title)
 
   def add(self, data, **kwargs):
-    self.ax.plot(data[:, 0], data[:, 1], zs=data[:, 2], **kwargs)
+    return self.ax.plot(data[:, 0], data[:, 1], zs=data[:, 2], **kwargs)
 
   def __getattr__(self, f, *args, **kwargs):
     if f.startswith("set_"):
       return getattr(self.ax, f)
 
   def legend(self, **kwargs):
-    dedup_legend(self.ax, **kwargs)
+    return dedup_legend(self.ax, **kwargs)
+
+  def axis_equal(self):
+    return set_3daxes_equal(self.ax)
 
 class Subplot:
   def __init__(self, title=None, xt=None, yt=None, **kwargs):
@@ -171,7 +174,7 @@ class Subplot:
       self.axs[i].plot(times, data[:, i], **kwargs)
 
   def legend(self, **kwargs):
-    dedup_legend(self.axs[-1], **kwargs)
+    return dedup_legend(self.axs[-1], **kwargs)
 
   def _map_method(self, methodname, *args, **kwargs):
     for ax in self.axs:
