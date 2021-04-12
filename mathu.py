@@ -140,7 +140,16 @@ def rodrot(k, v):
   s = np.sin(ang)
   return v * c + np.cross(ax, v) * s + ax.dot(v) * (1 - c) * ax
 
-def rot_from_z_and_yaw(z, yaw):
+def rot_from_z_yaw_zyx(z, yaw):
+  """ Yaw as defined via Euler angles ZYX """
+  c1 = np.array((-np.sin(yaw), np.cos(yaw), np.zeros_like(yaw))).T
+  x = np.cross(c1, z)
+  x /= np.linalg.norm(x, axis=-1)[:, np.newaxis]
+  y = np.cross(z, x)
+
+  return np.stack((x, y, z), axis=-1)
+
+def rot_from_z_yaw_zxy(z, yaw):
   """ Yaw as defined via Euler angles ZXY """
   c1 = np.array((np.cos(yaw), np.sin(yaw), np.zeros_like(yaw))).T
   y = np.cross(z, c1)
