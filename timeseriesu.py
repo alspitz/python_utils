@@ -132,28 +132,48 @@ class TimeSeries(dict):
 
     self.sub_add(self, **kwargs)
 
-  def _finalize(self, d):
-    for name, vals in d.items():
-      if isinstance(vals, dict):
-        self._finalize(vals)
-      else:
-        test = np.array(vals)
-        # Deal with scipy Rotation object bug
-        if len(test.shape) == 32:
-          d[name] = vals
-        else:
-          d[name] = test
+  def _finalize(self, name, vals, d):
+    test = np.array(vals)
+    # Deal with scipy Rotation object bug
+    if len(test.shape) == 32:
+      d[name] = vals
+    else:
+      d[name] = test
 
-        setattr(d, name, d[name])
+    setattr(d, name, d[name])
 
   def finalize(self):
     self.times = np.array(self.times)
     self.meta_times = np.array(self.meta_times)
-    self._finalize(self)
+    self.apply_f(self._finalize, self)
 
     if len(self.times):
       self.t0 = self.times[0]
       self.finalized = True
+
+  def apply_f(self, f, d, *args, **kwargs):
+    for name, vals in d.items():
+      if isinstance(vals, dict):
+        self.apply_f(f, vals, *args, **kwargs)
+      else:
+        f(name, vals, d, *args, **kwargs)
+
+  def _delete_inds(self, name, vals, d, inds):
+    # Only to deal with numpy Rotation bug
+    if isinstance(vals, list):
+      d[name] = [val for i, val in enumerate(vals) if i not in inds]
+    else:
+      d[name] = np.delete(d[name], inds, axis=0)
+
+    setattr(d, name, d[name])
+
+  def remove_dup_times(self):
+    assert self.finalized
+
+    timedups = np.hstack((np.diff(self.times) == 0, False))
+    self.times = np.delete(self.times, timedups)
+    self.meta_times = np.delete(self.meta_times, timedups)
+    self.apply_f(self._delete_inds, self, timedups)
 
   def get_masked_view(self, timemask):
     assert self.finalized
