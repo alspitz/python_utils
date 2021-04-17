@@ -129,6 +129,9 @@ def smoothang(ang):
 
 def rodmat(k):
   ang = np.linalg.norm(k)
+  if ang < 1e-9:
+    return np.eye(3)
+
   K = hat(k / ang)
   return np.eye(3) + np.sin(ang) * K + (1 - np.cos(ang)) * K.dot(K)
 
