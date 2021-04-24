@@ -131,10 +131,12 @@ class Subplot:
     self.fig = None
 
     for methodname in ['axvspan', 'axhspan', 'grid']:
-      def proxy(*args, methodname=methodname, **kwargs):
-        return self._map_method(methodname, *args, **kwargs)
+      def f(m=methodname):
+        def proxy(*args, **kwargs):
+          return self._map_method(m, *args, **kwargs)
+        return proxy
 
-      setattr(self, methodname, proxy)
+      setattr(self, methodname, f(methodname))
 
   def _create_fig(self, rows, cols):
     self.fig, self.axs = plt.subplots(rows, cols, **self.kwargs)
