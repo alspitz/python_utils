@@ -127,6 +127,10 @@ def smoothang(ang):
   """
   return np.hstack((ang[0], ang[0] + np.cumsum(normang(np.diff(ang)))))
 
+def avgang(angs):
+  """ Angles in radians. Returns "average" angle using unit vector method """
+  return np.arctan2(np.sum(np.sin(angs)), np.sum(np.cos(angs)))
+
 def rodmat(k):
   ang = np.linalg.norm(k)
   if ang < 1e-9:

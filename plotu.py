@@ -130,7 +130,7 @@ class Subplot:
     self.kwargs = kwargs
     self.fig = None
 
-    for methodname in ['axvspan', 'axhspan', 'grid']:
+    for methodname in ['axvspan', 'axhspan', 'grid', 'set_aspect']:
       def f(m=methodname):
         def proxy(*args, **kwargs):
           return self._map_method(m, *args, **kwargs)
@@ -177,6 +177,11 @@ class Subplot:
 
   def legend(self, **kwargs):
     return dedup_legend(self.axs[-1], **kwargs)
+
+  def envelope(self, times, data, radius, **kwargs):
+    assert len(self.axs) == data.shape[1]
+    for i in range(len(self.axs)):
+      self.axs[i].fill_between(times, data[:, i] - radius, data[:, i] + radius, **kwargs)
 
   def _map_method(self, methodname, *args, **kwargs):
     for ax in self.axs:
