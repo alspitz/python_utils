@@ -212,3 +212,13 @@ class TimeSeries(dict):
 
   def get_all(self):
     return self.get_view(-np.inf, np.inf)
+
+  def retime(self, fieldstr, newts, fill_value=0.0, **kwargs):
+    from scipy.interpolate import interp1d
+
+    fieldlist = fieldstr.split('.')
+    obj = self
+    for field in fieldlist:
+      obj = getattr(obj, field)
+
+    return interp1d(self.times, obj, axis=0, bounds_error=False, fill_value=fill_value, **kwargs)(newts)
