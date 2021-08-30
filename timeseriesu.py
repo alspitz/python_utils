@@ -1,6 +1,6 @@
 import numpy as np
 
-def masked_copy(src, dest, mask):
+def trans_data(src, dest, f):
   # Ideally, this meta data should not be in the same namespace as the data.
   forbidden_keys = ["times", "meta_times", "metadata", "finalized", "t0"]
   for k, data in src.__dict__.items():
@@ -9,20 +9,45 @@ def masked_copy(src, dest, mask):
 
     if isinstance(data, dict):
       dest[k] = BasicAttrDict()
-      masked_copy(data, dest[k], mask)
+      trans_data(data, dest[k], f)
     else:
-      # Only to deal with numpy Rotation bug
-      if isinstance(data, list):
-        new_list = []
-        for i, x in enumerate(data):
-          if mask[i]:
-            new_list.append(x)
-        dest[k] = new_list
-
-      else:
-        dest[k] = data[mask]
+      dest[k] = f(data)
 
     setattr(dest, k, dest[k])
+
+def f_retimed(ts, newts):
+  from scipy.interpolate import interp1d
+  from scipy.spatial.transform import Rotation as R
+
+  def f(data, ts=ts, newts=newts):
+    if len(data) and type(data[0]) == type(R.identity()):
+      from scipy.spatial.transform import Slerp
+      rots = R.from_matrix([rot.as_matrix() for rot in data])
+      return Slerp(ts, rots)(newts)
+
+    return interp1d(ts, data, axis=0)(newts)
+
+  return f
+
+def f_masked(mask):
+  def f(data, mask=mask):
+    # Only to deal with numpy Rotation bug
+    if isinstance(data, list):
+      new_list = []
+      for i, x in enumerate(data):
+        if mask[i]:
+          new_list.append(x)
+      return new_list
+
+    return data[mask]
+
+  return f
+
+def retimed_copy(src, dest, oldts, newts):
+  return trans_data(src, dest, f_retimed(oldts, newts))
+
+def masked_copy(src, dest, mask):
+  return trans_data(src, dest, f_masked(mask))
 
 class BasicAttrDict(dict):
   pass
@@ -222,3 +247,26 @@ class TimeSeries(dict):
       obj = getattr(obj, field)
 
     return interp1d(self.times, obj, axis=0, bounds_error=False, fill_value=fill_value, **kwargs)(newts)
+
+  def retimeall(self, newts, **kwargs):
+    assert np.all(np.diff(newts) >= 0)
+    assert np.all(np.diff(self.times) >= 0)
+
+
+    newts = newts[np.logical_and(newts >= self.times[0], newts <= self.times[-1])]
+
+    ret = TimeSeries(metadata=self.metadata)
+    ret.finalized = True
+    ret.times = newts
+
+    if hasattr(self, 't0'):
+      if len(ret.times):
+        ret.t0 = ret.times[0]
+      else:
+        ret.t0 = self.t0
+
+    ret.meta_times = None
+
+    retimed_copy(self, ret, self.times, newts)
+
+    return ret
