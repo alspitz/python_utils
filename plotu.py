@@ -87,8 +87,8 @@ class Plot:
     if title is not None:
       self.ax.set_title(title)
 
-  def add(self, times, data, **kwargs):
-    return self.ax.plot(times, data, **kwargs)
+  def add(self, times, data, *args, **kwargs):
+    return self.ax.plot(times, data, *args, **kwargs)
 
   def __getattr__(self, f, *args, **kwargs):
     if f.startswith("set_"):
@@ -109,8 +109,8 @@ class Plot3D:
       self.fig.canvas.manager.set_window_title(title)
       self.ax.set_title(title)
 
-  def add(self, data, **kwargs):
-    return self.ax.plot(data[:, 0], data[:, 1], zs=data[:, 2], **kwargs)
+  def add(self, data, *args, **kwargs):
+    return self.ax.plot(data[:, 0], data[:, 1], zs=data[:, 2], *args, **kwargs)
 
   def __getattr__(self, f, *args, **kwargs):
     if f.startswith("set_"):
@@ -130,7 +130,7 @@ class Subplot:
     self.kwargs = kwargs
     self.fig = None
 
-    for methodname in ['axvspan', 'axhspan', 'grid', 'set_aspect']:
+    for methodname in ['axvspan', 'axhspan', 'grid', 'set_aspect', 'axvline', 'axhline']:
       def f(m=methodname):
         def proxy(*args, **kwargs):
           return self._map_method(m, *args, **kwargs)
@@ -155,7 +155,7 @@ class Subplot:
     if self.xt is not None:
       self.axs[-1].set_xlabel(str(self.xt))
 
-  def add(self, times, data, **kwargs):
+  def add(self, times, data, *args, **kwargs):
     if type(data) is not np.ndarray:
       data = np.array(data)
 
@@ -173,10 +173,10 @@ class Subplot:
     assert rows <= len(self.axs)
 
     for i in range(rows):
-      self.axs[i].plot(times, data[:, i], **kwargs)
+      self.axs[i].plot(times, data[:, i], *args, **kwargs)
 
-  def legend(self, **kwargs):
-    return dedup_legend(self.axs[-1], **kwargs)
+  def legend(self, *args, **kwargs):
+    return dedup_legend(self.axs[-1], *args, **kwargs)
 
   def envelope(self, times, data, radius, **kwargs):
     assert len(self.axs) == data.shape[1]
@@ -186,3 +186,10 @@ class Subplot:
   def _map_method(self, methodname, *args, **kwargs):
     for ax in self.axs:
       getattr(ax, methodname)(*args, **kwargs)
+
+  def tight_layout(self, **kwargs):
+    self.fig.tight_layout(**kwargs)
+
+  def show(self, **kwargs):
+    plt.show(**kwargs)
+
