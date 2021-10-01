@@ -192,3 +192,69 @@ def numerical_jacobian(f, xs, dx=1e-6):
     jac[:, :, i] = (f(x_try) - ys) / dx
 
   return jac
+
+def numerical_grad_mani(f, x, x_dim, f_addhat, dx=1e-6):
+  """
+      Assuming f outputs elements in a Euclidean space,
+      but input x may be on a manifold.
+      f_addhat(x, dx) = x + hat(dx), where + is addition on the manifold.
+      hat(dx) should project from the lie algebra to the manifold
+  """
+  y = f(x)
+
+  assert len(y.shape) <= 1
+  y_dim = y.shape[0] if len(y.shape) == 1 else 1
+
+  grad = np.empty((y_dim, x_dim))
+  for i in range(x_dim):
+    Dx = dx * e(x_dim, i + 1)
+    grad[:, i] = (f(f_addhat(x, Dx)) - y) / dx
+
+  if grad.shape[0] == 1:
+    return grad[0]
+
+  return grad
+
+def numerical_hess_mani(f, x, x_dim, f_addhat, dx=1e-6):
+  def gradf(x):
+    return numerical_grad_mani(f, x, x_dim, f_addhat, dx=dx)
+
+  return numerical_grad_mani(gradf, x, x_dim, f_addhat, dx=dx)
+
+def gradient_descent_mani(f, x, f_addhat, alpha, maxiter=10000, min_cost_change=1e-10, min_grad_norm=1e-6, print_progress=False, show_hessian=False):
+  """
+     f(x) = (cost, gradient)
+  """
+  prev_cost = 99e99
+  for i in range(maxiter):
+    cost, grad = f(x)
+
+    if print_progress and i and not i % 100:
+      print(i, cost, x)
+
+    #numgrad = numerical_grad_mani(lambda x: f(x)[0], x, len(grad), f_addhat, dx=1e-8)
+    #assert np.allclose(grad, numgrad)
+    if np.linalg.norm(grad) < min_grad_norm:
+      if print_progress:
+        print("Gradient small, exiting.")
+      break
+
+    if abs(cost - prev_cost) < min_cost_change:
+      if print_progress:
+        print("Small change in cost, exiting.")
+      break
+
+    prev_cost = prev_cost
+
+    x = f_addhat(x, -alpha * grad)
+
+  else:
+    print("WARNING: maxiter = %d reached, exiting." % maxiter)
+
+  if show_hessian:
+    numhess = numerical_hess_mani(lambda x: f(x)[0], x, len(grad), f_addhat, dx=1e-5)
+    vals, vecs = np.linalg.eigh(numhess)
+    print("Hessian eigenvalues:", vals)
+    print(vecs)
+
+  return x, i
