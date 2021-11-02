@@ -121,6 +121,12 @@ def normang(ang):
   """
   return (ang + np.pi) % (2 * np.pi) - np.pi
 
+def normangpos(ang):
+  """ ang is in radians
+      returns in [0, 2pi]
+  """
+  return ang % (2 * np.pi)
+
 def smoothang(ang):
   """
     "unnormalizes" such that angle value is smooth and measures cumulative angle
