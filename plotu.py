@@ -129,6 +129,7 @@ class Subplot:
     self.yt = yt
     self.kwargs = kwargs
     self.fig = None
+    self.axs = None
 
     for methodname in ['axvspan', 'axhspan', 'grid', 'set_aspect', 'axvline', 'axhline']:
       def f(m=methodname):
@@ -176,7 +177,8 @@ class Subplot:
       self.axs[i].plot(times, data[:, i], *args, **kwargs)
 
   def legend(self, *args, **kwargs):
-    return dedup_legend(self.axs[-1], *args, **kwargs)
+    if self.axs is not None:
+      return dedup_legend(self.axs[-1], *args, **kwargs)
 
   def envelope(self, times, data, radius, **kwargs):
     assert len(self.axs) == data.shape[1]
