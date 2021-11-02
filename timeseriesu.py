@@ -1,5 +1,14 @@
 import numpy as np
 
+def apply_f_to_ts(src, f):
+  for k, data in src.__dict__.items():
+    if isinstance(data, TimeSeries):
+      src[k] = f(data)
+      setattr(src, k, src[k])
+
+    elif isinstance(data, DataSet):
+      apply_f_to_ts(data, f)
+
 def trans_data(src, dest, f):
   # Ideally, this meta data should not be in the same namespace as the data.
   forbidden_keys = ["times", "meta_times", "metadata", "finalized", "t0"]
