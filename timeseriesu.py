@@ -24,7 +24,7 @@ def trans_data(src, dest, f):
 
     setattr(dest, k, dest[k])
 
-def f_retimed(ts, newts):
+def f_retimed(ts, newts, **kwargs):
   from scipy.interpolate import interp1d
   from scipy.spatial.transform import Rotation as R
 
@@ -34,7 +34,7 @@ def f_retimed(ts, newts):
       rots = R.from_matrix([rot.as_matrix() for rot in data])
       return Slerp(ts, rots)(newts)
 
-    return interp1d(ts, data, axis=0)(newts)
+    return interp1d(ts, data, axis=0, **kwargs)(newts)
 
   return f
 
@@ -52,8 +52,8 @@ def f_masked(mask):
 
   return f
 
-def retimed_copy(src, dest, oldts, newts):
-  return trans_data(src, dest, f_retimed(oldts, newts))
+def retimed_copy(src, dest, oldts, newts, **kwargs):
+  return trans_data(src, dest, f_retimed(oldts, newts, **kwargs))
 
 def masked_copy(src, dest, mask):
   return trans_data(src, dest, f_masked(mask))
@@ -113,6 +113,9 @@ class TimeSeries(dict):
     self.meta_times = []
     self.metadata = metadata
     self.finalized = False
+
+  def __len__(self):
+    return len(self.times)
 
   def _build_dict(self, d, obj, ind):
     for name, val in d.items():
@@ -276,6 +279,6 @@ class TimeSeries(dict):
 
     ret.meta_times = None
 
-    retimed_copy(self, ret, self.times, newts)
+    retimed_copy(self, ret, self.times, newts, **kwargs)
 
     return ret
