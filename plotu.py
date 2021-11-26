@@ -94,7 +94,11 @@ class Plot:
     if f.startswith("set_"):
       return getattr(self.ax, f)
 
-class Plot3D:
+class PlotBase:
+  def show(self, **kwargs):
+    plt.show(**kwargs)
+
+class Plot3D(PlotBase):
   def __init__(self, title=None, xt=None, yt=None, zt=None, **kwargs):
     self.fig = plt.figure(**kwargs)
     self.ax = plt.axes(projection='3d')
@@ -122,7 +126,7 @@ class Plot3D:
   def axis_equal(self):
     return set_3daxes_equal(self.ax)
 
-class Subplot:
+class Subplot(PlotBase):
   def __init__(self, title=None, xt=None, yt=None, **kwargs):
     self.title = title
     self.xt = xt
@@ -181,9 +185,18 @@ class Subplot:
       return dedup_legend(self.axs[-1], *args, **kwargs)
 
   def envelope(self, times, data, radius, **kwargs):
+    if len(data.shape) == 1:
+      data = data[:, np.newaxis]
+
     assert len(self.axs) == data.shape[1]
+
     for i in range(len(self.axs)):
-      self.axs[i].fill_between(times, data[:, i] - radius, data[:, i] + radius, **kwargs)
+      if len(radius.shape) == 1:
+        rad = radius
+      else:
+        rad = radius[:, i]
+
+      self.axs[i].fill_between(times, data[:, i] - rad, data[:, i] + rad, **kwargs)
 
   def _map_method(self, methodname, *args, **kwargs):
     for ax in self.axs:
@@ -191,7 +204,3 @@ class Subplot:
 
   def tight_layout(self, **kwargs):
     self.fig.tight_layout(**kwargs)
-
-  def show(self, **kwargs):
-    plt.show(**kwargs)
-
