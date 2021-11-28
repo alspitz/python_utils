@@ -135,7 +135,22 @@ class Subplot(PlotBase):
     self.fig = None
     self.axs = None
 
-    for methodname in ['axvspan', 'axhspan', 'grid', 'set_aspect', 'axvline', 'axhline']:
+    passalongs = [
+      'axvline',
+      'axhline',
+      'axvspan',
+      'axhspan',
+      'grid',
+      'set_aspect',
+      'set_xlim',
+      'set_ylim',
+      'set_xticks',
+      'set_yticks',
+      'set_xticklabels',
+      'set_yticklabels',
+    ]
+
+    for methodname in passalongs:
       def f(m=methodname):
         def proxy(*args, **kwargs):
           return self._map_method(m, *args, **kwargs)
@@ -180,9 +195,9 @@ class Subplot(PlotBase):
     for i in range(rows):
       self.axs[i].plot(times, data[:, i], *args, **kwargs)
 
-  def legend(self, *args, **kwargs):
+  def legend(self, axind=-1, *args, **kwargs):
     if self.axs is not None:
-      return dedup_legend(self.axs[-1], *args, **kwargs)
+      return dedup_legend(self.axs[axind], *args, **kwargs)
 
   def envelope(self, times, data, radius, **kwargs):
     if len(data.shape) == 1:
