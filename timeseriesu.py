@@ -12,17 +12,26 @@ def apply_f_to_ts(src, f):
 def trans_data(src, dest, f):
   # Ideally, this meta data should not be in the same namespace as the data.
   forbidden_keys = ["times", "meta_times", "metadata", "finalized", "t0"]
-  for k, data in src.__dict__.items():
-    if k in forbidden_keys:
-      continue
-
-    if isinstance(data, dict):
-      dest[k] = BasicAttrDict()
-      trans_data(data, dest[k], f)
+  if not hasattr(src, '__dict__'):
+    if type(src) is dict:
+      for k, data in src.items():
+        dest[k] = f(data)
     else:
-      dest[k] = f(data)
+      # What to do
+      assert False
 
-    setattr(dest, k, dest[k])
+  else:
+    for k, data in src.__dict__.items():
+      if k in forbidden_keys:
+        continue
+
+      if isinstance(data, dict):
+        dest[k] = BasicAttrDict()
+        trans_data(data, dest[k], f)
+      else:
+        dest[k] = f(data)
+
+      setattr(dest, k, dest[k])
 
 def f_retimed(ts, newts, **kwargs):
   from scipy.interpolate import interp1d
@@ -47,6 +56,10 @@ def f_masked(mask):
         if mask[i]:
           new_list.append(x)
       return new_list
+
+    # For any auxiliary vars that may have been added...
+    if isinstance(data, (str, int, float, np.generic)):
+      return data
 
     return data[mask]
 
@@ -209,7 +222,8 @@ class TimeSeries(dict):
 
     timedups = np.hstack((np.diff(self.times) == 0, False))
     self.times = np.delete(self.times, timedups)
-    self.meta_times = np.delete(self.meta_times, timedups)
+    if self.meta_times:
+      self.meta_times = np.delete(self.meta_times, timedups)
     self.apply_f(self._delete_inds, self, timedups)
 
   def get_masked_view(self, timemask):
