@@ -51,11 +51,13 @@ def f_masked(mask):
   def f(data, mask=mask):
     # Only to deal with numpy Rotation bug
     if isinstance(data, list):
-      new_list = []
-      for i, x in enumerate(data):
-        if mask[i]:
-          new_list.append(x)
-      return new_list
+      if len(data) == len(mask):
+        new_list = []
+        for i, x in enumerate(data):
+          if mask[i]:
+            new_list.append(x)
+        return new_list
+      return data
 
     # For any auxiliary vars that may have been added...
     if isinstance(data, (str, int, float, np.generic)):
