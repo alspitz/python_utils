@@ -192,8 +192,11 @@ class Subplot(PlotBase):
 
     assert rows <= len(self.axs)
 
+    rets = []
     for i in range(rows):
-      self.axs[i].plot(times, data[:, i], *args, **kwargs)
+      rets.append(self.axs[i].plot(times, data[:, i], *args, **kwargs))
+
+    return rets
 
   def legend(self, axind=-1, *args, **kwargs):
     if self.axs is not None:
