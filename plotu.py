@@ -98,6 +98,9 @@ class PlotBase:
   def show(self, **kwargs):
     plt.show(**kwargs)
 
+  def tight_layout(self, **kwargs):
+    self.fig.tight_layout(**kwargs)
+
 class Plot3D(PlotBase):
   def __init__(self, title=None, xt=None, yt=None, zt=None, **kwargs):
     self.fig = plt.figure(**kwargs)
@@ -169,7 +172,13 @@ class Subplot(PlotBase):
 
     if self.yt is not None:
       for i, ax in enumerate(self.axs):
-        lab = self.yt[i] if type(self.yt) is list else self.yt
+        if type(self.yt) in (list, tuple):
+          if i >= len(self.yt):
+            break
+          lab = self.yt[i]
+        else:
+          lab = self.yt
+
         ax.set_ylabel(str(lab))
 
     if self.xt is not None:
@@ -202,7 +211,17 @@ class Subplot(PlotBase):
     if self.axs is not None:
       return dedup_legend(self.axs[axind], *args, **kwargs)
 
-  def envelope(self, times, data, radius, **kwargs):
+  def envelope(self, times, data, radius, radiusdown=None, **kwargs):
+    if radiusdown is None:
+      radiusdown = radius
+
+    if type(data) is not np.ndarray:
+      data = np.array(data)
+    if type(radius) is not np.ndarray:
+      radius = np.array(radius)
+    if type(radiusdown) is not np.ndarray:
+      radiusdown = np.array(radiusdown)
+
     if len(data.shape) == 1:
       data = data[:, np.newaxis]
 
@@ -214,11 +233,13 @@ class Subplot(PlotBase):
       else:
         rad = radius[:, i]
 
-      self.axs[i].fill_between(times, data[:, i] - rad, data[:, i] + rad, **kwargs)
+      if len(radiusdown.shape) == 1:
+        raddown = radiusdown
+      else:
+        raddown = radiusdown[:, i]
+
+      self.axs[i].fill_between(times, data[:, i] - raddown, data[:, i] + rad, **kwargs)
 
   def _map_method(self, methodname, *args, **kwargs):
     for ax in self.axs:
       getattr(ax, methodname)(*args, **kwargs)
-
-  def tight_layout(self, **kwargs):
-    self.fig.tight_layout(**kwargs)
