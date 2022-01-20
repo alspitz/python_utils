@@ -44,9 +44,12 @@ def dedup_legend(ax=None, **kwargs):
   if ax is None:
     ax = plt.gca()
 
+  if 'handles' in kwargs or 'labels' in kwargs:
+    return ax.legend(**kwargs)
+
   handles, labels = ax.get_legend_handles_labels()
   by_label = dict(zip(labels, handles))
-  return ax.legend(by_label.values(), by_label.keys(), **kwargs)
+  return ax.legend(handles=by_label.values(), labels=by_label.keys(), **kwargs)
 
 def simpleplot(times, data, yname="", title="", **kwargs):
   namedt(title)
@@ -130,19 +133,26 @@ class Plot3D(PlotBase):
     return set_3daxes_equal(self.ax)
 
 class Subplot(PlotBase):
-  def __init__(self, title=None, xt=None, yt=None, **kwargs):
+  def __init__(self, title=None, xt=None, yt=None, fontsize=None, rows=None, **kwargs):
     self.title = title
     self.xt = xt
     self.yt = yt
+    self.fontsize = fontsize
     self.kwargs = kwargs
     self.fig = None
     self.axs = None
+
+    if rows is not None:
+      assert rows < 20
+      self._create_fig(rows, 1)
 
     passalongs = [
       'axvline',
       'axhline',
       'axvspan',
       'axhspan',
+      'get_xlim',
+      'get_ylim',
       'grid',
       'set_aspect',
       'set_xlim',
@@ -153,10 +163,28 @@ class Subplot(PlotBase):
       'set_yticklabels',
     ]
 
+    fig_passalongs = [
+      'align_labels',
+      'savefig',
+      'subplots_adjust',
+    ]
+
     for methodname in passalongs:
       def f(m=methodname):
         def proxy(*args, **kwargs):
           return self._map_method(m, *args, **kwargs)
+        return proxy
+
+      setattr(self, methodname, f(methodname))
+
+    for methodname in fig_passalongs:
+      def f(m=methodname):
+        def proxy(*args, **kwargs):
+          if self.fig is None:
+            return
+
+          return getattr(self.fig, m)(*args, **kwargs)
+
         return proxy
 
       setattr(self, methodname, f(methodname))
@@ -168,7 +196,10 @@ class Subplot(PlotBase):
 
     if self.title is not None:
       self.fig.canvas.manager.set_window_title(self.title)
-      self.axs[0].set_title(self.title)
+      params = dict()
+      if self.fontsize is not None:
+        params.update(fontsize=self.fontsize)
+      self.axs[0].set_title(self.title, **params)
 
     if self.yt is not None:
       for i, ax in enumerate(self.axs):
@@ -241,5 +272,7 @@ class Subplot(PlotBase):
       self.axs[i].fill_between(times, data[:, i] - raddown, data[:, i] + rad, **kwargs)
 
   def _map_method(self, methodname, *args, **kwargs):
-    for ax in self.axs:
-      getattr(ax, methodname)(*args, **kwargs)
+    if self.axs is None:
+      return
+
+    return [getattr(ax, methodname)(*args, **kwargs) for ax in self.axs]
