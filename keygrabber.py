@@ -7,7 +7,6 @@ Restores terminal settings on program exit.
 """
 
 import atexit
-import select
 import sys
 import termios
 import tty
@@ -19,14 +18,31 @@ class KeyGrabber:
 
   def _setup_keys(self):
     fd = sys.stdin.fileno()
+
     self.old_settings = termios.tcgetattr(fd)
+
     tty.setcbreak(fd)
+    new_settings = termios.tcgetattr(fd)
+    new_settings[6][termios.VMIN] = 0
+    new_settings[6][termios.VTIME] = 0
+
+    termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
 
   def _restore_keys(self):
     termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, self.old_settings)
 
   def read(self):
     chars = []
-    while select.select([sys.stdin,], [], [], 0.0)[0]:
-      chars.append(sys.stdin.read(1))
+    while c := sys.stdin.read(1):
+      chars.append(c)
     return chars
+
+if __name__ == "__main__":
+  import time
+
+  kg = KeyGrabber()
+  while 1:
+    chars = kg.read()
+    if chars:
+      print(f"Got {len(chars)} chars: ", chars)
+    time.sleep(0.02)
