@@ -1,5 +1,7 @@
 import numpy as np
 
+from scipy.spatial.transform import Rotation as R
+
 def apply_f_to_ts(src, f):
   for k, data in src.__dict__.items():
     if isinstance(data, TimeSeries):
@@ -185,12 +187,16 @@ class TimeSeries(dict):
     self.sub_add(self, **kwargs)
 
   def _finalize(self, name, vals, d):
-    test = np.array(vals)
-    # Deal with scipy Rotation object bug
-    if len(test.shape) == 32:
-      d[name] = vals
+    # Special case for Rotation objects
+    if vals and type(vals[0]) is R and hasattr(R, 'concatenate'):
+      d[name] = R.concatenate(vals)
     else:
-      d[name] = test
+      test = np.array(vals)
+      # Deal with scipy Rotation object bug
+      if len(test.shape) == 32:
+        d[name] = vals
+      else:
+        d[name] = test
 
     setattr(d, name, d[name])
 
