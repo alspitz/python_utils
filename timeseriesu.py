@@ -139,10 +139,10 @@ class TimeSeries(dict):
       if isinstance(val, dict):
         obj[name] = BasicAttrDict()
         self._build_dict(val, obj[name], ind)
-      elif isinstance(val, np.ndarray) or isinstance(val, list):
+      elif isinstance(val, np.ndarray) or isinstance(val, list) or type(val) is R:
         obj[name] = val[ind]
       else:
-        print(val)
+        print("Unhandled value:", val, ". Please fix me.")
         assert False
 
       setattr(obj, name, obj[name])
@@ -217,9 +217,12 @@ class TimeSeries(dict):
         f(name, vals, d, *args, **kwargs)
 
   def _delete_inds(self, name, vals, d, inds):
+    """ inds is a boolean mask """
     # Only to deal with numpy Rotation bug
     if isinstance(vals, list):
-      d[name] = [val for i, val in enumerate(vals) if i not in inds]
+      d[name] = [val for i, val in enumerate(vals) if not inds[i]]
+    elif type(vals) is R:
+      d[name] = d[name][np.logical_not(inds)]
     else:
       d[name] = np.delete(d[name], inds, axis=0)
 
@@ -230,9 +233,10 @@ class TimeSeries(dict):
 
     timedups = np.hstack((np.diff(self.times) == 0, False))
     self.times = np.delete(self.times, timedups)
-    if self.meta_times:
+    if self.meta_times is not None and len(self.meta_times):
       self.meta_times = np.delete(self.meta_times, timedups)
     self.apply_f(self._delete_inds, self, timedups)
+    return timedups.sum()
 
   def get_masked_view(self, timemask):
     assert self.finalized
