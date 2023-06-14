@@ -85,6 +85,10 @@ class BasicAttrDict(dict):
   pass
 
 class DataSet(dict):
+  def __setattr__(self, k, v):
+    self[k] = v
+    object.__setattr__(self, k, v)
+
   def _item_map(self, f):
     ret = DataSet()
     for k, v in self.items():
