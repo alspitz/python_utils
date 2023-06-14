@@ -37,13 +37,19 @@ def trans_data(src, dest, f):
 
 def f_retimed(ts, newts, **kwargs):
   from scipy.interpolate import interp1d
-  from scipy.spatial.transform import Rotation as R
+  from scipy.spatial.transform import Rotation as R, Slerp
 
   def f(data, ts=ts, newts=newts):
-    if len(data) and type(data[0]) == type(R.identity()):
-      from scipy.spatial.transform import Slerp
+    if len(data) and type(data) is R:
+      return Slerp(ts, data)(newts)
+    elif len(data) and type(data[0]) == type(R.identity()):
+      # Keep this in case we are using lists.
       rots = R.from_matrix([rot.as_matrix() for rot in data])
       return Slerp(ts, rots)(newts)
+    elif len(data) and type(data[0]) in [str, np.str, np.str_]:
+      print(f"WARNING: interpolating with non numericals not well supported (copying first: {data[0]})")
+      # I wish interp1d with kind='nearest' works here.
+      return np.array([data[0]] * len(newts))
 
     return interp1d(ts, data, axis=0, **kwargs)(newts)
 
@@ -287,10 +293,6 @@ class TimeSeries(dict):
     return interp1d(self.times, obj, axis=0, bounds_error=False, fill_value=fill_value, **kwargs)(newts)
 
   def retimeall(self, newts, **kwargs):
-    assert np.all(np.diff(newts) >= 0)
-    assert np.all(np.diff(self.times) >= 0)
-
-
     newts = newts[np.logical_and(newts >= self.times[0], newts <= self.times[-1])]
 
     ret = TimeSeries(metadata=self.metadata)
