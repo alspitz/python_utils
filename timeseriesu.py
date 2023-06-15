@@ -46,7 +46,7 @@ def f_retimed(ts, newts, **kwargs):
       # Keep this in case we are using lists.
       rots = R.from_matrix([rot.as_matrix() for rot in data])
       return Slerp(ts, rots)(newts)
-    elif len(data) and type(data[0]) in [str, np.str, np.str_]:
+    elif len(data) and type(data[0]) in [str, np.str_]:
       print(f"WARNING: interpolating with non numericals not well supported (copying first: {data[0]})")
       # I wish interp1d with kind='nearest' works here.
       return np.array([data[0]] * len(newts))
