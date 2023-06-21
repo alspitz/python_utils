@@ -201,7 +201,11 @@ class TimeSeries(dict):
     if vals and type(vals[0]) is R and hasattr(R, 'concatenate'):
       d[name] = R.concatenate(vals)
     else:
-      test = np.array(vals)
+      try:
+        test = np.array(vals)
+      except ValueError:
+        test = np.array(vals, dtype=object)
+
       # Deal with scipy Rotation object bug
       if len(test.shape) == 32:
         d[name] = vals
