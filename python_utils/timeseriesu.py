@@ -205,7 +205,6 @@ class TimeSeries(dict):
         test = np.array(vals)
       except ValueError:
         test = np.array(vals, dtype=object)
-
       # Deal with scipy Rotation object bug
       if len(test.shape) == 32:
         d[name] = vals
@@ -318,3 +317,8 @@ class TimeSeries(dict):
     retimed_copy(self, ret, self.times, newts, **kwargs)
 
     return ret
+
+  def syncwith(self, ts, **kwargs):
+    timemask = np.logical_and(ts.times >= self.times[0], ts.times <= self.times[-1])
+    ret = self.retimeall(ts.times[timemask], **kwargs)
+    return ret, ts.get_masked_view(timemask)
