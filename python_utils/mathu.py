@@ -227,16 +227,16 @@ def numerical_hess_mani(f, x, x_dim, f_addhat, dx=1e-6):
 
   return numerical_grad_mani(gradf, x, x_dim, f_addhat, dx=dx)
 
-def gradient_descent_mani(f, x, f_addhat, alpha, maxiter=10000, min_cost_change=1e-10, min_grad_norm=1e-6, print_progress=False, debug_grad=False, show_hessian=False):
+def gradient_descent_mani(f, x, f_addhat, alpha, maxiter=10000, min_cost_change=1e-10, min_grad_norm=1e-6, print_progress=False, debug_grad=False, show_hessian=False, print_callback=print):
   """
      f(x) = (cost, gradient)
   """
   prev_cost = 99e99
-  for i in range(maxiter):
+  for iterno in range(maxiter):
     cost, grad = f(x)
 
-    if print_progress and i and not i % 100:
-      print(i, cost, x)
+    if print_progress and iterno and not iterno % 100:
+      print_callback(iterno, cost, x)
 
     if debug_grad:
       numgrad = numerical_grad_mani(lambda x: f(x)[0], x, len(grad), f_addhat, dx=1e-8)
@@ -266,4 +266,4 @@ def gradient_descent_mani(f, x, f_addhat, alpha, maxiter=10000, min_cost_change=
     for i in range(len(vecs)):
       print(vals[i], vecs[:, i])
 
-  return x, i
+  return x, iterno
