@@ -46,7 +46,7 @@ def f_retimed(ts, newts, **kwargs):
       # Keep this in case we are using lists.
       rots = R.from_matrix([rot.as_matrix() for rot in data])
       return Slerp(ts, rots)(newts)
-    elif len(data) and type(data[0]) in [str, np.str_]:
+    elif len(data) and type(data[0]) in [str, np.str_, bytes, np.bytes_]:
       print(f"WARNING: interpolating with non numericals not well supported (copying first: {data[0]})")
       # I wish interp1d with kind='nearest' works here.
       return np.array([data[0]] * len(newts))
@@ -299,8 +299,9 @@ class TimeSeries(dict):
 
     return interp1d(self.times, obj, axis=0, bounds_error=False, fill_value=fill_value, **kwargs)(newts)
 
-  def retimeall(self, newts, **kwargs):
-    newts = newts[np.logical_and(newts >= self.times[0], newts <= self.times[-1])]
+  def retimeall(self, newts, interponly=True, **kwargs):
+    if interponly:
+      newts = newts[np.logical_and(newts >= self.times[0], newts <= self.times[-1])]
 
     ret = TimeSeries(metadata=self.metadata)
     ret.finalized = True
