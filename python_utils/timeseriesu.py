@@ -262,7 +262,7 @@ class TimeSeries(dict):
         ret.t0 = ret.times[0]
       else:
         ret.t0 = self.t0
-    if len(self.meta_times):
+    if self.meta_times is not None and len(self.meta_times):
       ret.meta_times = self.meta_times[timemask].copy()
     else:
       ret.meta_times = self.meta_times
