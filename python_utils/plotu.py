@@ -276,3 +276,5 @@ class Subplot(PlotBase):
       return
 
     return [getattr(ax, methodname)(*args, **kwargs) for ax in self.axs]
+
+show = plt.show
