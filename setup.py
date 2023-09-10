@@ -5,4 +5,10 @@ setup(
     packages=find_packages(),
     author="Alex Spitzer",
     license=open("LICENSE", mode="r").read(),
+    install_requires=(
+      'numpy',
+      'scipy',
+      'matplotlib',
+      'joblib',
+    ),
 )
