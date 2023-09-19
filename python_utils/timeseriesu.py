@@ -41,6 +41,12 @@ def f_retimed(ts, newts, **kwargs):
 
   def f(data, ts=ts, newts=newts):
     if len(data) and type(data) is R:
+      # Allow rotation re-timing with nearest if times out of order
+      if 'kind' in kwargs and kwargs['kind'] == 'nearest':
+        quat = data.as_quat()
+        quat_retimed = interp1d(ts, quat, axis=0, **kwargs)(newts)
+        return R.from_quat(quat_retimed)
+
       return Slerp(ts, data)(newts)
     elif len(data) and type(data[0]) == type(R.identity()):
       # Keep this in case we are using lists.
@@ -302,6 +308,8 @@ class TimeSeries(dict):
   def retimeall(self, newts, interponly=True, **kwargs):
     if interponly:
       newts = newts[np.logical_and(newts >= self.times[0], newts <= self.times[-1])]
+    elif 'fill_value' not in kwargs:
+      kwargs['fill_value'] = 'extrapolate'
 
     ret = TimeSeries(metadata=self.metadata)
     ret.finalized = True
