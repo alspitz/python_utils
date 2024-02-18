@@ -247,6 +247,10 @@ class TimeSeries(dict):
 
     setattr(d, name, d[name])
 
+  def _reorder_inds(self, name, vals, d, inds):
+    d[name] = vals[inds]
+    setattr(d, name, d[name])
+
   def remove_dup_times(self):
     assert self.finalized
 
@@ -256,6 +260,23 @@ class TimeSeries(dict):
       self.meta_times = np.delete(self.meta_times, timedups)
     self.apply_f(self._delete_inds, self, timedups)
     return timedups.sum()
+
+  def order_times(self):
+    assert self.finalized
+
+    if np.all(self.times[:-1] <= self.times[1:]):
+      return
+
+    # Use a sorting algorithm that's fast for almost sorted
+    sort_inds = np.argsort(self.times, kind='stable')
+
+    self.times = self.times[sort_inds]
+    if self.meta_times is not None and len(self.meta_times):
+      self.meta_times = self.meta_times[sort_inds]
+    if hasattr(self, 't0'):
+      self.t0 = self.times[0]
+
+    self.apply_f(self._reorder_inds, self, sort_inds)
 
   def get_masked_view(self, timemask):
     assert self.finalized
