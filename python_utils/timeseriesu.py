@@ -169,7 +169,7 @@ class TimeSeries(dict):
       obj = BasicAttrDict()
       self._build_dict(self, obj, i)
       obj.t = self.times[i]
-      if len(self.meta_times):
+      if self.meta_times is not None and len(self.meta_times):
         obj.meta_t = self.meta_times[i]
 
       yield obj
